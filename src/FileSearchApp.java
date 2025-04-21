@@ -100,39 +100,53 @@ public class FileSearchApp extends JFrame {
          ******************************************/
         String folderPath = folderField.getText().trim();
         String keyword = keywordField.getText().trim();
-
+    
         if (folderPath.isEmpty() || keyword.isEmpty()) {
             JOptionPane.showMessageDialog(this, "폴더와 검색어를 모두 입력하세요.");
             return;
         }
-
+    
         File folder = new File(folderPath);
         if (!folder.isDirectory()) {
             JOptionPane.showMessageDialog(this, "유효한 폴더를 선택하세요.");
             return;
         }
-
+    
         resultArea.setText("검색 중...\n");
-
+    
         /******************************************
-         * 2. 검색 로직
+         * 2. 검색 시작 시간 측정
+         ******************************************/
+        long startTime = System.currentTimeMillis();
+    
+        /******************************************
+         * 3. 검색 로직
          ******************************************/
         ArrayList<File> foundFiles = new ArrayList<>();
         searchInFolder(folder, keyword, foundFiles);
-
+    
         /******************************************
-         * 3. 검색 결과 출력
+         * 4. 검색 종료 시간 측정 및 경과 계산
          ******************************************/
+        long endTime = System.currentTimeMillis();
+        double elapsedSeconds = (endTime - startTime) / 1000.0;
+    
+        /******************************************
+         * 5. 검색 결과 출력
+         ******************************************/
+        StringBuilder sb = new StringBuilder();
+    
         if (foundFiles.isEmpty()) {
-            resultArea.setText("검색된 결과가 없습니다.");
+            sb.append("검색된 결과가 없습니다.\n");
         } else {
-            StringBuilder sb = new StringBuilder();
             sb.append("검색된 파일 목록:\n");
             for (File file : foundFiles) {
                 sb.append(file.getAbsolutePath()).append("\n");
             }
-            resultArea.setText(sb.toString());
         }
+    
+        sb.append(String.format("\n검색 완료 (소요 시간: %.2f초)", elapsedSeconds));
+        resultArea.setText(sb.toString());
     }
 
     /**
