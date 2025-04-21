@@ -1,0 +1,12 @@
+1. javac -d out src/FileSearchApp.java
+
+2. jar cfe FileSearchApp.jar FileSearchApp -C out .
+    c:   Create / 새 .jar 만들기
+    f:    File   / 이름을 지정한 .jar 파일로 저장
+    e:   Entry point / main()이 있는 클래스 지정 (FileSearchApp)
+
+
+※ bat 파일
+@echo off
+cd /d "%~dp0"
+"C:\Program Files\Java\jdk11.0.13\bin\javaw" -jar FileSearchApp.jar
