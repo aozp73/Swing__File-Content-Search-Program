@@ -95,9 +95,6 @@ public class FileSearchApp extends JFrame {
     }
 
     private void searchFiles() {
-        /******************************************
-         * 1. 유효성 체크
-         ******************************************/
         String folderPath = folderField.getText().trim();
         String keyword = keywordField.getText().trim();
     
@@ -114,71 +111,71 @@ public class FileSearchApp extends JFrame {
     
         resultArea.setText("검색 중...\n");
     
-        /******************************************
-         * 2. 검색 시작 시간 측정
-         ******************************************/
         long startTime = System.currentTimeMillis();
     
-        /******************************************
-         * 3. 검색 로직
-         ******************************************/
         ArrayList<File> foundFiles = new ArrayList<>();
-        searchInFolder(folder, keyword, foundFiles);
+        ArrayList<Integer> matchLines = new ArrayList<>(); // 각 파일의 매칭 줄 수 저장
+        searchInFolder(folder, keyword, foundFiles, matchLines);
     
-        /******************************************
-         * 4. 검색 종료 시간 측정 및 경과 계산
-         ******************************************/
         long endTime = System.currentTimeMillis();
         double elapsedSeconds = (endTime - startTime) / 1000.0;
     
-        /******************************************
-         * 5. 검색 결과 출력
-         ******************************************/
         StringBuilder sb = new StringBuilder();
     
+        int totalMatchedLines = 0;
         if (foundFiles.isEmpty()) {
             sb.append("검색된 결과가 없습니다.\n");
         } else {
             sb.append("검색된 파일 목록:\n");
-            for (File file : foundFiles) {
-                sb.append(file.getAbsolutePath()).append("\n");
+            for (int i = 0; i < foundFiles.size(); i++) {
+                File file = foundFiles.get(i);
+                int lines = matchLines.get(i);
+                totalMatchedLines += lines;
+                sb.append(String.format("%s (포함 라인 수: %d)\n", file.getAbsolutePath(), lines));
             }
         }
     
+        sb.append(String.format("\n총 포함 라인 수: %d줄", totalMatchedLines));
         sb.append(String.format("\n검색 완료 (소요 시간: %.2f초)", elapsedSeconds));
         resultArea.setText(sb.toString());
     }
-
+    
     /**
      * @param folder
      * @param keyword
      * @param result
      * @implNote 지정된 폴더 내부 순회 -> 순회 중 keyword를 포함한 파일 탐색 -> 찾으면, result 리스트에 추가
      */
-    private void searchInFolder(File folder, String keyword, ArrayList<File> result) {
+    private void searchInFolder(File folder, String keyword, ArrayList<File> resultFiles, ArrayList<Integer> matchLines) {
         File[] files = folder.listFiles();
         if (files == null) return;
-
+    
         for (File file : files) {
             if (file.isDirectory()) {
-                searchInFolder(file, keyword, result);
+                searchInFolder(file, keyword, resultFiles, matchLines);
             } else {
-                if (file.canRead() && file.length() < 10 * 1024 * 1024) { // 10MB 이하 파일만
+                if (file.canRead() && file.length() < 10 * 1024 * 1024) { // 10MB 이하
+                    int matchCount = 0;
                     try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
                         String line;
                         while ((line = reader.readLine()) != null) {
                             if (line.contains(keyword)) {
-                                result.add(file);
-                                break;
+                                matchCount++;
                             }
                         }
                     } catch (IOException e) {
                         // 읽기 실패 무시
                     }
+    
+                    if (matchCount > 0) {
+                        resultFiles.add(file);
+                        matchLines.add(matchCount);
+                    }
                 }
             }
         }
     }
+    
 
     public static void main(String[] args) {
         // SwingUtilities.invokeLater / 이벤트 디스패치 스레드(EDT)
